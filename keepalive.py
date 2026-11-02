@@ -117,8 +117,12 @@ async def ws_exec(cmd, wait_idle=4.0):
     url = ("wss://app.memoh.net/api/memoh/bots/%s/container/terminal/ws"
            "?cols=120&rows=40" % BOT)
     headers = {"Cookie": cookie, "Origin": ORIGIN, "X-Team-ID": TEAM_BOX["v"]}
-    async with websockets.connect(url, additional_headers=headers,
-                                  open_timeout=30, max_size=2 ** 22) as ws:
+    kw = dict(open_timeout=30, max_size=2 ** 22)
+    try:
+        conn = websockets.connect(url, additional_headers=headers, **kw)
+    except TypeError:  # websockets >= 14 renamed the kwarg
+        conn = websockets.connect(url, extra_headers=headers, **kw)
+    async with conn as ws:
         out = b""
         try:
             out += await asyncio.wait_for(ws.recv(), timeout=6)
