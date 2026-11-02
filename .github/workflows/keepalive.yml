@@ -1,0 +1,31 @@
+name: memho keepalive
+
+# Dispatched by cron-job.org every 10 minutes.
+# GA native schedule on this account does not fire reliably -> external leg only.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+concurrency:
+  group: memho-keepalive
+  cancel-in-progress: false
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: install deps
+        run: pip install --quiet websockets==12.0
+      - name: nezha keepalive
+        env:
+          MEMOH_USER: ${{ secrets.MEMOH_USER }}
+          MEMOH_PASS: ${{ secrets.MEMOH_PASS }}
+          MEMOH_BOT_ID: ${{ secrets.MEMOH_BOT_ID }}
+          MEMOH_TEAM_ID: ${{ secrets.MEMOH_TEAM_ID }}
+        run: python keepalive.py
